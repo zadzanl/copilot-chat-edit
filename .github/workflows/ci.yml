@@ -21,7 +21,7 @@ jobs:
 
       - run: npm run compile
 
-      - run: npx vsce package -o dist/
+      - run: mkdir -p dist && npx vsce package -o dist/
 
       - uses: actions/upload-artifact@v4
         with:
