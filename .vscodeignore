@@ -1,0 +1,9 @@
+.vscode/**
+src/**
+dist/**
+out/**/*.map
+node_modules/**
+tsconfig.json
+.github/**
+.gitignore
+.chat-export-tmp-*

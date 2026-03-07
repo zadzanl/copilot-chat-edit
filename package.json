@@ -1,0 +1,91 @@
+{
+  "name": "copilot-chat-porter",
+  "displayName": "Copilot Chat Porter",
+  "description": "Let GitHub Copilot Chat export and import its own conversation history via natural language",
+  "version": "0.0.1",
+  "publisher": "Vizards",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Vizards/copilot-chat-porter"
+  },
+  "icon": "icon.png",
+  "engines": {
+    "vscode": "^1.99.0"
+  },
+  "categories": [
+    "AI",
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "enabledApiProposals": [],
+  "contributes": {
+    "languageModelTools": [
+      {
+        "name": "exportChatHistory",
+        "displayName": "Export Chat History",
+        "modelDescription": "Exports the current Copilot Chat session history (all user messages, AI responses, file references, tool calls) as a JSON file to the workspace. Call this tool when the user asks to save, export, or dump the current conversation/chat history. Returns the exported JSON content so you can also reformat it (e.g. to markdown) before saving.",
+        "toolReferenceName": "exportChatHistory",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(history)",
+        "tags": [
+          "chat",
+          "history",
+          "export",
+          "conversation"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "outputPath": {
+              "type": "string",
+              "description": "Relative path (from workspace root) to save the exported JSON file. Example: 'exports/chat-2024-03-07.json'. If omitted, auto-generates a timestamped filename in the workspace root."
+            }
+          }
+        }
+      },
+      {
+        "name": "importChatHistory",
+        "displayName": "Import Chat History",
+        "toolReferenceName": "importChatHistory",
+        "modelDescription": "Imports and restores a previously exported Copilot Chat session from a JSON file. Call this tool when the user asks to restore, load, or resume a previous conversation from a saved chat history file. The session will be opened in a new chat tab.",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(folder-opened)",
+        "tags": [
+          "chat",
+          "history",
+          "import",
+          "restore"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "required": [
+            "inputPath"
+          ],
+          "properties": {
+            "inputPath": {
+              "type": "string",
+              "description": "Relative path (from workspace root) to the chat history JSON file to import. Example: 'exports/chat-2024-03-07.json'"
+            }
+          }
+        }
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package -o dist/",
+    "publish": "vsce publish",
+    "login": "vsce login Vizards"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.99.0",
+    "@vscode/vsce": "^3.7.1",
+    "typescript": "^5.7.0"
+  }
+}
