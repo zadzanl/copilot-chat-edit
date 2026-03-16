@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.0
+
+- **URI Handler**: External scripts can trigger export/import via `code --open-url "vscode://Vizards.copilot-chat-porter/export?..."`, enabling integration with Copilot Hooks and shell scripts
+- **Attachment saving**: Optionally copy externally-referenced files (outside workspace) into a local directory alongside the exported JSON, with automatic path rewriting for portability
+- **Command Palette**: Export and import directly via `Cmd+Shift+P` without AI involvement
+- **Callback support**: URI Handler export accepts an optional `callback` parameter (Named Pipe / file path) for synchronous result feedback
+- **Absolute path support**: `outputPath` and `inputPath` now accept both absolute and relative paths
+- **File deduplication**: Same-name attachments with identical content are skipped; different content gets a numeric suffix
+- **Code restructure**: Split single-file extension into modular architecture (core, attachments, uriHandler, lmTools, commands, utils)
+
 ## 0.0.2
 
 - Add CI/CD workflows (GitHub Actions)

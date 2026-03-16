@@ -4,7 +4,11 @@
 [![Version](https://img.shields.io/visual-studio-marketplace/v/Vizards.copilot-chat-porter?style=for-the-badge)](https://marketplace.visualstudio.com/items?itemName=Vizards.copilot-chat-porter)
 [![Installs](https://img.shields.io/visual-studio-marketplace/i/Vizards.copilot-chat-porter?style=for-the-badge)](https://marketplace.visualstudio.com/items?itemName=Vizards.copilot-chat-porter)
 
-A VS Code extension that enables GitHub Copilot Chat to export and import its own conversation history via [Language Model Tools](https://code.visualstudio.com/api/extension-guides/ai/tools).
+A VS Code extension that enables GitHub Copilot Chat to export and import its own conversation history via:
+
+- [Language Model Tools](https://code.visualstudio.com/api/extension-guides/ai/tools)
+- URI Handler
+- Command Palette
 
 ## Features
 
@@ -24,6 +28,44 @@ Restore a previously exported session and continue the conversation:
 - *"Load the chat from exports/today.json"*
 
 The restored session opens in a new chat tab with full history.
+
+### Attachment Saving
+
+Optionally copy externally-referenced files (outside the workspace) alongside the exported JSON, making the export self-contained and portable:
+
+- *"导出对话并把附件保存到 attachments 目录"*
+- *"Export with attachments to the assets folder"*
+
+Files are deduplicated by content — identical files are skipped, and name conflicts get a numeric suffix (`report-1.pdf`). All file paths in the JSON are automatically rewritten to point to the local copies.
+
+### External Script Access (URI Handler)
+
+Trigger export/import from shell scripts, Copilot Hooks, or any external process:
+
+```bash
+# Export
+code --open-url "vscode://Vizards.copilot-chat-porter/export?outputPath=exports/chat.json&attachmentsDir=attachments"
+
+# Import
+code --open-url "vscode://Vizards.copilot-chat-porter/import?inputPath=exports/chat.json"
+```
+
+For synchronous result feedback, pass a `callback` parameter pointing to a Named Pipe:
+
+```bash
+PIPE=$(mktemp -u /tmp/porter-XXXXX.pipe)
+mkfifo "$PIPE"
+code --open-url "vscode://Vizards.copilot-chat-porter/export?outputPath=exports/chat.json&callback=$(python3 -c "import urllib.parse; print(urllib.parse.quote('$PIPE'))")"
+RESULT=$(timeout 30 cat "$PIPE")
+rm -f "$PIPE"
+```
+
+### Command Palette
+
+Export and import directly via `Cmd+Shift+P`:
+
+- **Copilot Chat Porter: Export Chat History** — save dialog + optional attachments directory
+- **Copilot Chat Porter: Import Chat History** — open dialog to select a JSON file
 
 ### What's in the exported JSON?
 
@@ -53,16 +95,30 @@ Agent: (calls exportChatHistory tool) → Done ✅
 
 User: Restore the session from history/chat.json
 Agent: (calls importChatHistory tool) → Opened in new tab ✅
+
+User: Export and save all attachments to the assets folder
+Agent: (calls exportChatHistory with attachmentsDir) → Done ✅
 ```
 
 You can also reference the tools explicitly with `#exportChatHistory` or `#importChatHistory` in the chat input.
 
 ### Via Command Palette
 
-The built-in VS Code commands also work independently:
+- `Cmd+Shift+P` → **"Copilot Chat Porter: Export Chat History"**
+- `Cmd+Shift+P` → **"Copilot Chat Porter: Import Chat History"**
 
-- `Cmd+Shift+P` → **"Export Chat..."** — save to any location
-- `Cmd+Shift+P` → **"Import Chat..."** — restore from a file
+### Via External Scripts
+
+Use the URI Handler to integrate with Copilot Hooks or automation scripts. See [External Script Access](#external-script-access-uri-handler) above.
+
+## Path Rules
+
+| Parameter | Absolute | Relative | Base |
+|-----------|----------|----------|------|
+| `outputPath` | ✅ | ✅ | Workspace root |
+| `inputPath` | ✅ | ✅ | Workspace root |
+| `attachmentsDir` | ❌ (error) | ✅ | Exported JSON's directory |
+| `callback` | ✅ | ❌ | — |
 
 ## Development
 
@@ -81,12 +137,13 @@ Press **F5** in VS Code to launch the Extension Development Host for debugging.
 
 ## How It Works
 
-The extension registers two [Language Model Tools](https://code.visualstudio.com/api/extension-guides/ai/tools) that Copilot's agent can invoke automatically:
+The extension provides three entry points that share the same core export/import logic:
 
-1. **`exportChatHistory`** — Calls VS Code's internal `workbench.action.chat.export` command with a workspace-relative path, bypassing the file dialog.
-2. **`importChatHistory`** — Calls `workbench.action.chat.import` to restore a session from a JSON file into a new chat tab.
+1. **Language Model Tools** — Two tools (`exportChatHistory`, `importChatHistory`) registered via `vscode.lm.registerTool`, invoked by Copilot's agent automatically based on natural language input.
+2. **URI Handler** — Listens for `vscode://Vizards.copilot-chat-porter/<action>?<params>`, enabling external scripts to trigger operations via `code --open-url`.
+3. **Command Palette** — Standard VS Code commands with file dialogs for manual use.
 
-The AI model reads each tool's `inputSchema` to understand the parameters, and extracts values from the user's natural language input (e.g., *"save to exports/today.json"* → `{ outputPath: "exports/today.json" }`).
+Under the hood, export calls VS Code's internal `workbench.action.chat.export` command, and import calls `workbench.action.chat.import`. When `attachmentsDir` is provided, the extension scans the exported JSON for file URI objects (`$mid` + `scheme: "file"`), copies external files into the specified directory with deduplication, and rewrites all path references in the JSON via string replacement.
 
 ## License
 

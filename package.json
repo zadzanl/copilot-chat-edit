@@ -2,7 +2,7 @@
   "name": "copilot-chat-porter",
   "displayName": "Copilot Chat Porter",
   "description": "Let GitHub Copilot Chat export and import its own conversation history via natural language",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "publisher": "Vizards",
   "license": "MIT",
   "repository": {
@@ -18,16 +18,27 @@
     "Other"
   ],
   "activationEvents": [
-    "onStartupFinished"
+    "onStartupFinished",
+    "onUri"
   ],
   "main": "./out/extension.js",
   "enabledApiProposals": [],
   "contributes": {
+    "commands": [
+      {
+        "command": "copilot-chat-porter.export",
+        "title": "Copilot Chat Porter: Export Chat History"
+      },
+      {
+        "command": "copilot-chat-porter.import",
+        "title": "Copilot Chat Porter: Import Chat History"
+      }
+    ],
     "languageModelTools": [
       {
         "name": "exportChatHistory",
         "displayName": "Export Chat History",
-        "modelDescription": "Exports the current Copilot Chat session history (all user messages, AI responses, file references, tool calls) as a JSON file to the workspace. Call this tool when the user asks to save, export, or dump the current conversation/chat history. Returns the exported JSON content so you can also reformat it (e.g. to markdown) before saving.",
+        "modelDescription": "Exports the current Copilot Chat session history (all user messages, AI responses, file references, tool calls) as a JSON file. Call this tool when the user asks to save, export, or dump the current conversation/chat history. Optionally copies externally-referenced files (outside the workspace) into a local attachments directory so the export is self-contained and portable. Pass attachmentsDir when the user wants to preserve attached files alongside the export.",
         "toolReferenceName": "exportChatHistory",
         "canBeReferencedInPrompt": true,
         "icon": "$(history)",
@@ -42,7 +53,11 @@
           "properties": {
             "outputPath": {
               "type": "string",
-              "description": "Relative path (from workspace root) to save the exported JSON file. Example: 'exports/chat-2024-03-07.json'. If omitted, auto-generates a timestamped filename in the workspace root."
+              "description": "Path to save the exported JSON file. Accepts absolute path or relative path (resolved from workspace root). If omitted, auto-generates a timestamped filename in the workspace root."
+            },
+            "attachmentsDir": {
+              "type": "string",
+              "description": "If provided, copies externally-referenced files (outside workspace) into this directory. Relative path only, resolved from the exported JSON file's directory. If omitted, no attachments are copied."
             }
           }
         }
@@ -68,7 +83,7 @@
           "properties": {
             "inputPath": {
               "type": "string",
-              "description": "Relative path (from workspace root) to the chat history JSON file to import. Example: 'exports/chat-2024-03-07.json'"
+              "description": "Path to the chat history JSON file to import. Accepts absolute path or relative path (resolved from workspace root)."
             }
           }
         }
