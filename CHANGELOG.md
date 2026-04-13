@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.1
+
+- **Codespaces support**: Fix LM Tool calls hanging in GitHub Codespaces by setting `extensionKind` to `workspace`, ensuring the extension runs in the same host as Copilot Chat
+- **Remote URI handling**: Fix `resolvePathToUri` to preserve `vscode-remote://` URI scheme instead of creating `file:///` URIs in remote environments
+- **Robustness**: Add timeouts to export command (15s) and file verification (5s) to prevent indefinite hangs
+- **Packaging**: Exclude `tmp/` and `docs/` from VSIX to reduce package size
+
 ## 0.1.0
 
 - **URI Handler**: External scripts can trigger export/import via `code --open-url "vscode://Vizards.copilot-chat-porter/export?..."`, enabling integration with Copilot Hooks and shell scripts

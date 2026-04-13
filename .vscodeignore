@@ -4,6 +4,8 @@ dist/**
 out/**/*.map
 node_modules/**
 tsconfig.json
+tmp/**
+docs/**
 .github/**
 .gitignore
 .chat-export-tmp-*

@@ -12,10 +12,9 @@ export class ExportChatHistoryTool implements vscode.LanguageModelTool<ExportToo
 		options: vscode.LanguageModelToolInvocationOptions<ExportToolInput>,
 		_token: vscode.CancellationToken,
 	): Promise<vscode.LanguageModelToolResult> {
-		LOG.info('Export tool invoked with options:', JSON.stringify(options.input));
-
 		try {
 			const rootUri = getWorkspaceRootUri();
+
 			const outputUri = options.input?.outputPath
 				? resolvePathToUri(options.input.outputPath)
 				: vscode.Uri.joinPath(rootUri, generateTimestampedFilename());
@@ -26,7 +25,7 @@ export class ExportChatHistoryTool implements vscode.LanguageModelTool<ExportToo
 				new vscode.LanguageModelTextPart(formatExportResult(result)),
 			]);
 		} catch (err) {
-			LOG.error('Export failed:', String(err));
+			LOG.error('[LM Tool] Export failed:', String(err));
 			return new vscode.LanguageModelToolResult([
 				new vscode.LanguageModelTextPart(`Export failed: ${String(err)}`),
 			]);

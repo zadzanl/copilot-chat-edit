@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { LOG, isAbsolutePath, ensureParentDir } from './utils';
+import { LOG, isAbsolutePath, ensureParentDir, withTimeout } from './utils';
 import { AttachmentMapping, processAttachments } from './attachments';
 
 export interface ExportResult {
@@ -9,8 +9,10 @@ export interface ExportResult {
 	error?: string;
 }
 
+const EXPORT_CMD_TIMEOUT_MS = 15_000;
+
 export async function coreExport(outputUri: vscode.Uri, attachmentsDir?: string): Promise<ExportResult> {
-	LOG.info(`coreExport: outputUri=${outputUri.fsPath}, attachmentsDir=${attachmentsDir ?? '(none)'}`);
+	LOG.info(`coreExport: outputUri=${outputUri.toString()}, attachmentsDir=${attachmentsDir ?? '(none)'}`);
 
 	if (attachmentsDir && isAbsolutePath(attachmentsDir)) {
 		throw new Error('attachmentsDir must be a relative path (resolved from the exported JSON file\'s directory). Absolute paths are not allowed.');
@@ -18,9 +20,17 @@ export async function coreExport(outputUri: vscode.Uri, attachmentsDir?: string)
 
 	await ensureParentDir(outputUri);
 
-	LOG.info('Calling workbench.action.chat.export...');
-	await vscode.commands.executeCommand('workbench.action.chat.export', outputUri);
-	await vscode.workspace.fs.stat(outputUri);
+	await withTimeout(
+		vscode.commands.executeCommand('workbench.action.chat.export', outputUri),
+		EXPORT_CMD_TIMEOUT_MS,
+		'workbench.action.chat.export',
+	);
+
+	await withTimeout(
+		vscode.workspace.fs.stat(outputUri),
+		5_000,
+		'workspace.fs.stat',
+	);
 
 	let mappings: AttachmentMapping[] = [];
 
@@ -57,7 +67,7 @@ export async function coreImport(inputUri: vscode.Uri): Promise<void> {
 }
 
 export function formatExportResult(result: ExportResult): string {
-	const relPath = vscode.workspace.asRelativePath(vscode.Uri.file(result.outputPath!));
+	const relPath = vscode.workspace.asRelativePath(result.outputPath!);
 	const lines = [`Chat history exported successfully to: ${relPath}`];
 	if (result.attachments && result.attachments.length > 0) {
 		lines.push('Attachments synced:');

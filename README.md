@@ -1,8 +1,8 @@
 # Copilot Chat Porter
 
 [![Install in VS Code](https://img.shields.io/badge/VS%20Code-Install%20Extension-blue?logo=visualstudiocode&style=for-the-badge)](https://marketplace.visualstudio.com/items?itemName=Vizards.copilot-chat-porter)
-[![Version](https://img.shields.io/visual-studio-marketplace/v/Vizards.copilot-chat-porter?style=for-the-badge)](https://marketplace.visualstudio.com/items?itemName=Vizards.copilot-chat-porter)
-[![Installs](https://img.shields.io/visual-studio-marketplace/i/Vizards.copilot-chat-porter?style=for-the-badge)](https://marketplace.visualstudio.com/items?itemName=Vizards.copilot-chat-porter)
+[![Version](https://vsmarketplacebadges.dev/version-short/Vizards.copilot-chat-porter.svg?style=for-the-badge)](https://marketplace.visualstudio.com/items?itemName=Vizards.copilot-chat-porter)
+[![Installs](https://vsmarketplacebadges.dev/installs-short/Vizards.copilot-chat-porter.svg?style=for-the-badge)](https://marketplace.visualstudio.com/items?itemName=Vizards.copilot-chat-porter)
 
 A VS Code extension that enables GitHub Copilot Chat to export and import its own conversation history via:
 
