@@ -1,0 +1,55 @@
+schema: spec-driven
+
+context: |
+  Project: Copilot Chat Porter — a VS Code extension (publisher: Vizards, v0.1.1)
+  Repo: https://github.com/Vizards/copilot-chat-porter
+
+  Tech stack:
+  - Language: TypeScript 5.x, compiled to CommonJS (ES2022 target)
+  - Runtime: VS Code Extension Host (vscode >= 1.99.0)
+  - No runtime npm dependencies — only devDependencies (@types/vscode, typescript, @vscode/vsce)
+  - Build: `tsc -p ./` (output to `out/`); dev via F5 Extension Development Host
+
+  Architecture — three entry points, one shared core:
+  - src/extension.ts   — activate/deactivate; registers all subscriptions
+  - src/lmTools.ts     — ExportChatHistoryTool, ImportChatHistoryTool (vscode.LanguageModelTool)
+  - src/uriHandler.ts  — PorterUriHandler (vscode.UriHandler) for vscode://Vizards.copilot-chat-porter/<action>
+  - src/commands.ts    — commandExport, commandImport (Command Palette with dialogs)
+  - src/core.ts        — coreExport and coreImport shared workflows; formatExportResult for LM/Command Palette export text
+  - src/attachments.ts — processAttachments, copyAttachments, rewritePaths (attachment portability)
+  - src/utils.ts       — LOG, isAbsolutePath, getWorkspaceRootUri, resolvePathToUri, generateTimestampedFilename, ensureParentDir, fileExists, withTimeout
+
+  Key domain rules:
+  - outputPath / inputPath: lexical absolute OR relative-to-first-workspace-folder; absolute paths preserve the workspace URI scheme
+  - attachmentsDir: lexical absolute paths are rejected; non-absolute paths resolve from the exported JSON directory without `..` containment checks
+  - callback (URI export only): lexical absolute path required; relative callback logs an error and aborts export
+  - Export races `workbench.action.chat.export` with 15s, then `workspace.fs.stat` with 5s; a missing file can reject immediately
+  - URI export pre-focuses `workbench.panel.chat.view.copilot.focus` + 300ms delay
+  - Attachment deduplication: byte-equality comparison (no external hash library)
+  - Path rewriting: three patterns per mapping — normalized, backslash-escaped, file:// URI
+
+  Codespaces / remote compatibility:
+  - extensionKind: ["workspace"] so extension co-locates with Copilot Chat in remote hosts
+  - resolvePathToUri preserves the first workspace URI scheme (including vscode-remote) for absolute paths
+
+  Conventions:
+  - core owns shared export/import workflows; channels own parameter acquisition and presentation
+  - formatExportResult is used by LM tools and Command Palette export, not URI handling
+  - No automated tests exist today
+  - Output channel name: "Copilot Chat Porter"
+  - Timestamped filename format: chat-history-YYYY-MM-DD-HH-MM-SS.json
+
+rules:
+  proposal:
+    - Keep proposals under 2 pages
+    - Clearly separate New Capabilities from Modified Capabilities
+    - Documentation-only changes should call that out explicitly in the Impact section
+  specs:
+    - Use SHALL/MUST for normative requirements; avoid should/may
+    - Every requirement MUST have at least one scenario
+    - Scenarios use #### (four hashtags) — never ### or bullet points
+    - WHEN/THEN format is mandatory for scenarios
+  tasks:
+    - Tasks should be small enough to complete in one focused session
+    - Each task must be verifiable — you know unambiguously when it is done
+    - Order tasks by dependency
